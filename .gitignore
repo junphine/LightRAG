@@ -47,6 +47,8 @@ temp/
 .idea/
 .vscode/
 .vscode/settings.json
+.omo
+.codegraph
 
 # Framework-specific files
 local_neo4jWorkDir/

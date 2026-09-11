@@ -1,0 +1,26 @@
+[
+  {
+    "instance_name": "",
+    "port": 9621,
+    "workspace": "",
+    "env_file": ".env"
+  },
+  {
+    "instance_name": "chinese",
+    "port": 9622,
+    "workspace": "chinese",
+    "env_file": "./input/chinese/.env"
+  },
+  {
+    "instance_name": "english",
+    "port": 9623,
+    "workspace": "english",
+    "env_file": "./input/english/.env"
+  },
+  {
+    "instance_name": "codes",
+    "port": 9624,
+    "workspace": "codes",
+    "env_file": "./input/codes/.env"
+  }
+]
