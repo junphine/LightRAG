@@ -5,7 +5,7 @@ import logging
 import logging.config
 from functools import partial
 from lightrag import LightRAG, QueryParam
-from lightrag.llm.openai import openai_complete_if_cache
+from lightrag.llm.openai import openai_complete_if_cache,openai_embed
 from lightrag.llm.ollama import ollama_embed
 from lightrag.utils import EmbeddingFunc, logger, set_verbose_debug
 
@@ -108,6 +108,14 @@ async def print_stream(stream):
 async def initialize_rag():
     rag = LightRAG(
         working_dir=WORKING_DIR,
+        kv_storage=os.getenv("LIGHTRAG_KV_STORAGE", "JsonKVStorage"),
+        graph_storage=os.getenv("LIGHTRAG_GRAPH_STORAGE", "NetworkXStorage"),
+        doc_status_storage=os.getenv(
+            "LIGHTRAG_DOC_STATUS_STORAGE", "JsonDocStatusStorage"
+        ),
+        vector_storage=os.getenv(
+            "LIGHTRAG_VECTOR_STORAGE", "NoopVectorDBStorage"
+        ),
         llm_model_func=llm_model_func,
         # Note: ollama_embed is decorated with @wrap_embedding_func_with_attrs,
         # which wraps it in an EmbeddingFunc. Using .func accesses the original
@@ -117,9 +125,10 @@ async def initialize_rag():
             embedding_dim=int(os.getenv("EMBEDDING_DIM", "1024")),
             max_token_size=int(os.getenv("MAX_EMBED_TOKENS", "8192")),
             func=partial(
-                ollama_embed.func,  # Access the unwrapped function to avoid double EmbeddingFunc wrapping
-                embed_model=os.getenv("EMBEDDING_MODEL", "bge-m3:latest"),
-                host=os.getenv("EMBEDDING_BINDING_HOST", "http://localhost:11434"),
+                openai_embed.func,  # Access the unwrapped function to avoid double EmbeddingFunc wrapping
+                model=os.getenv("EMBEDDING_MODEL", "bge-m3:latest"),
+                base_url=os.getenv("EMBEDDING_BINDING_HOST", "http://localhost:11434"),
+                api_key=os.getenv("EMBEDDING_BINDING_API_KEY", ""),
             ),
         ),
     )
@@ -144,7 +153,7 @@ async def main():
         for file in files_to_delete:
             file_path = os.path.join(WORKING_DIR, file)
             if os.path.exists(file_path):
-                os.remove(file_path)
+                #os.remove(file_path)
                 print(f"Deleting old file:: {file_path}")
 
         # Initialize RAG instance

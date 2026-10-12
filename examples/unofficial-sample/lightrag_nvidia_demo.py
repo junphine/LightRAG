@@ -1,17 +1,12 @@
 import os
 import asyncio
 import nest_asyncio
-
+import json
 from lightrag import LightRAG, QueryParam
-from lightrag.llm import (
-    openai_complete_if_cache,
-    nvidia_openai_embed,
-)
+from lightrag.llm.openai import openai_complete_if_cache
+from lightrag.llm.nvidia_openai import nvidia_openai_embed
 from lightrag.utils import EmbeddingFunc
 import numpy as np
-
-# for custom llm_model_func
-from lightrag.utils import locate_json_string_body_from_string
 
 nest_asyncio.apply()
 
@@ -22,7 +17,7 @@ if not os.path.exists(WORKING_DIR):
 
 # some method to use your API key (choose one)
 # NVIDIA_OPENAI_API_KEY = os.getenv("NVIDIA_OPENAI_API_KEY")
-NVIDIA_OPENAI_API_KEY = "nvapi-xxxx"  # your api key
+NVIDIA_OPENAI_API_KEY = "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"  # your api key
 
 # using pre-defined function for nvidia LLM API. OpenAI compatible
 # llm_model_func = nvidia_openai_complete
@@ -42,7 +37,7 @@ async def llm_model_func(
         **kwargs,
     )
     if keyword_extraction:
-        return locate_json_string_body_from_string(result)
+        return json.loads(result)
     return result
 
 
@@ -165,4 +160,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(main(),debug=True)
