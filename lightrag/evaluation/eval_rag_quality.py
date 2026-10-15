@@ -917,7 +917,7 @@ class RAGEvaluator:
             / f"results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         )
         with open(json_path, "w") as f:
-            json.dump(summary, f, indent=2)
+            json.dump(summary, f, indent=2,ensure_ascii=False)
 
         # Export to CSV
         csv_path = self._export_to_csv(results)

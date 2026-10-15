@@ -65,7 +65,7 @@ from ..kg.vector_space import (
 import pipmaster as pm
 
 if not pm.is_installed("pymongo"):
-    pm.install("pymongo")
+    pm.install("pymongo==4.13.2")
 
 from pymongo import AsyncMongoClient  # type: ignore
 from pymongo import UpdateOne  # type: ignore
@@ -941,7 +941,6 @@ class MongoDocStatusStorage(DocStatusStorage):
                 },
                 {"name": f"{workspace_prefix}updated_at", "keys": [("updated_at", -1)]},
                 {"name": f"{workspace_prefix}created_at", "keys": [("created_at", -1)]},
-                {"name": f"{workspace_prefix}id", "keys": [("_id", 1)]},
                 {"name": f"{workspace_prefix}track_id", "keys": [("track_id", 1)]},
                 # New file_path indexes with Chinese collation and workspace-specific names
                 {
@@ -968,10 +967,6 @@ class MongoDocStatusStorage(DocStatusStorage):
                 # matches the MUST sort of get_docs_by_statuses_page
                 # ((created_at ASC, _id ASC) within each status branch of a
                 # status $in — the server merges the per-status keysets).
-                {
-                    "name": f"{workspace_prefix}status_created_at_id_asc",
-                    "keys": [("status", 1), ("created_at", 1), ("_id", 1)],
-                },
             ]
 
             # 2. Handle legacy index cleanup: only drop old indexes that exist in THIS collection
@@ -982,7 +977,6 @@ class MongoDocStatusStorage(DocStatusStorage):
                 "status_created_at",
                 "updated_at",
                 "created_at",
-                "id",
                 "track_id",
                 "content_hash",
             ]

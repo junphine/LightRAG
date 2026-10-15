@@ -1239,7 +1239,7 @@ class FaissVectorDBStorage(BaseVectorStorage):
 
         def _write_meta(tmp: str) -> None:
             with open(tmp, "w", encoding="utf-8") as f:
-                json.dump(serializable_dict, f)
+                json.dump(serializable_dict, f, indent=2,ensure_ascii=False)
 
         def _write_both() -> None:
             # One submission for both files: two would take two permits and

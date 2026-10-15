@@ -170,7 +170,7 @@ async def main():
         print(f"Detected embedding dimension: {embedding_dim}\n\n")
 
         with open("./book.txt", "r", encoding="utf-8") as f:
-            await rag.ainsert(f.read())
+            await rag.ainsert(f.read(),file_paths="./book.txt")
 
         # Perform naive search
         print("\n=====================")

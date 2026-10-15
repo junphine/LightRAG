@@ -7415,13 +7415,7 @@ class LightRAG(_RoleLLMMixin, _StorageMigrationMixin, _PipelineMixin):
                         elif original_exception is None:
                             # Deletion stages were in-flight but the try-block return was never
                             # reached; treat the persistence failure as the primary error.
-                            return DeletionResult(
-                                status="fail",
-                                doc_id=doc_id,
-                                message=f"Deletion completed but failed to persist changes: {persistence_error}",
-                                status_code=500,
-                                file_path=file_path,
-                            )
+                            original_exception = persistence_error
                         # If there was an original exception, log the persistence error but
                         # don't override it — the original error result was already returned.
                 else:
@@ -7467,6 +7461,16 @@ class LightRAG(_RoleLLMMixin, _StorageMigrationMixin, _PipelineMixin):
                             token=token,
                             action=_terminal_release,
                         )
+        if original_exception is not None:
+            # Deletion stages were in-flight but the try-block return was never
+            # reached; treat the persistence failure as the primary error.
+            return DeletionResult(
+                status="fail",
+                doc_id=doc_id,
+                message=f"Deletion completed but failed to persist changes: {original_exception}",
+                status_code=500,
+                file_path=file_path,
+            )
 
     # ------------------------------------------------------------------
     # Admin-write gate

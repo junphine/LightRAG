@@ -1,7 +1,8 @@
 import os
 import asyncio
+from functools import partial
 from lightrag import LightRAG, QueryParam
-from lightrag.llm.openai import gpt_4o_mini_complete, openai_embed
+from lightrag.llm.openai import openai_complete_if_cache,openai_embed
 from lightrag.utils import EmbeddingFunc
 import numpy as np
 
@@ -15,9 +16,12 @@ if not os.path.exists(WORKING_DIR):
     os.mkdir(WORKING_DIR)
 
 
-os.environ["OPENAI_API_KEY"] = "sk-"
-os.environ["MONGO_URI"] = "mongodb://0.0.0.0:27017/?directConnection=true"
-os.environ["MONGO_DATABASE"] = "LightRAG"
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path=".env", override=False)
+
+os.environ["MONGO_URI"] = "mongodb://127.0.0.1:27017/?directConnection=true"
+os.environ["MONGO_DATABASE"] = "graph"
 os.environ["MONGO_KG_COLLECTION"] = "MDB_KG"
 
 # Embedding Configuration and Functions
@@ -25,40 +29,40 @@ EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "text-embedding-3-large")
 EMBEDDING_MAX_TOKEN_SIZE = int(os.environ.get("EMBEDDING_MAX_TOKEN_SIZE", 8192))
 
 
-async def embedding_func(texts: list[str]) -> np.ndarray:
-    # Note: openai_embed is decorated with @wrap_embedding_func_with_attrs,
-    # which wraps it in an EmbeddingFunc. Using .func accesses the original
-    # unwrapped function to avoid double wrapping when we create our own
-    # EmbeddingFunc with custom configuration in create_embedding_function_instance().
-    return await openai_embed.func(
-        texts,
-        model=EMBEDDING_MODEL,
+async def llm_model_func(
+        prompt, system_prompt=None, history_messages=[], keyword_extraction=False, **kwargs
+) -> str:
+    return await openai_complete_if_cache(
+        os.getenv("LLM_MODEL", "deepseek-chat"),
+        prompt,
+        system_prompt=system_prompt,
+        history_messages=history_messages,
+        api_key=os.getenv("LLM_BINDING_API_KEY") or os.getenv("OPENAI_API_KEY"),
+        base_url=os.getenv("LLM_BINDING_HOST", "https://api.deepseek.com"),
+        **kwargs,
     )
-
-
-async def get_embedding_dimension():
-    test_text = ["This is a test sentence."]
-    embedding = await embedding_func(test_text)
-    return embedding.shape[1]
 
 
 async def create_embedding_function_instance():
-    # Get embedding dimension
-    embedding_dimension = await get_embedding_dimension()
     # Create embedding function instance
-    return EmbeddingFunc(
-        embedding_dim=embedding_dimension,
-        max_token_size=EMBEDDING_MAX_TOKEN_SIZE,
-        func=embedding_func,
+    embedding_func=EmbeddingFunc(
+        embedding_dim=int(os.getenv("EMBEDDING_DIM", "1024")),
+        max_token_size=int(os.getenv("MAX_EMBED_TOKENS", "8192")),
+        func=partial(
+            openai_embed.func,  # Access the unwrapped function to avoid double EmbeddingFunc wrapping
+            model=os.getenv("EMBEDDING_MODEL", "bge-m3:latest"),
+            base_url=os.getenv("EMBEDDING_BINDING_HOST", "http://localhost:11434"),
+            api_key=os.getenv("EMBEDDING_BINDING_API_KEY", ""),
+        ),
     )
-
+    return embedding_func
 
 async def initialize_rag():
     embedding_func_instance = await create_embedding_function_instance()
 
     rag = LightRAG(
         working_dir=WORKING_DIR,
-        llm_model_func=gpt_4o_mini_complete,
+        llm_model_func=llm_model_func,
         embedding_func=embedding_func_instance,
         graph_storage="MongoGraphStorage",
         log_level="DEBUG",
