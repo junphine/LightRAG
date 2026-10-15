@@ -4572,6 +4572,7 @@ class MongoVectorDBStorage(BaseVectorStorage):
                     "fields": [
                         {
                             "type": "vector",
+                            "dimensions": self.embedding_func.embedding_dim,
                             "numDimensions": self.embedding_func.embedding_dim,  # Ensure correct dimensions
                             "path": "vector",
                             "similarity": "cosine",  # Options: euclidean, cosine, dotProduct

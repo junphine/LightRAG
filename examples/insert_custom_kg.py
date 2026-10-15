@@ -1,4 +1,5 @@
 import os
+import asyncio
 from functools import partial
 from lightrag import LightRAG
 from lightrag.llm.openai import gpt_4o_mini_complete
@@ -37,6 +38,14 @@ async def llm_model_func(
 rag = LightRAG(
     working_dir=WORKING_DIR,
     llm_model_func=llm_model_func,  # Use gpt_4o_mini_complete LLM model
+    kv_storage=os.getenv("LIGHTRAG_KV_STORAGE", "JsonKVStorage"),
+    graph_storage=os.getenv("LIGHTRAG_GRAPH_STORAGE", "NetworkXStorage"),
+    doc_status_storage=os.getenv(
+        "LIGHTRAG_DOC_STATUS_STORAGE", "JsonDocStatusStorage"
+    ),
+    vector_storage=os.getenv(
+        "LIGHTRAG_VECTOR_STORAGE", "NoopVectorDBStorage"
+    ),
     # llm_model_func=gpt_4o_complete  # Optionally, use a stronger model
     embedding_func=EmbeddingFunc(
         embedding_dim=int(os.getenv("EMBEDDING_DIM", "1024")),
@@ -147,4 +156,9 @@ custom_kg = {
     ],
 }
 
-rag.insert_custom_kg(custom_kg)
+async def main() -> None:
+    await rag.initialize_storages()
+    await rag.ainsert_custom_kg(custom_kg)
+
+if __name__ == "__main__":
+    asyncio.run(main())
