@@ -8,7 +8,8 @@ from lightrag import LightRAG, QueryParam
 from lightrag.llm.openai import openai_complete_if_cache,openai_embed
 from lightrag.llm.ollama import ollama_embed
 from lightrag.utils import EmbeddingFunc, logger, set_verbose_debug
-
+from lightrag.chunker.recursive_character import chunking_by_recursive_character
+from lightrag.chunker.plugins import load_and_resolve_chunker
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=".env", override=False)
@@ -106,6 +107,7 @@ async def print_stream(stream):
 
 
 async def initialize_rag():
+    #chunking_func = load_and_resolve_chunker('recursive_character')
     rag = LightRAG(
         working_dir=WORKING_DIR,
         kv_storage=os.getenv("LIGHTRAG_KV_STORAGE", "JsonKVStorage"),
@@ -117,6 +119,7 @@ async def initialize_rag():
             "LIGHTRAG_VECTOR_STORAGE", "NoopVectorDBStorage"
         ),
         llm_model_func=llm_model_func,
+
         # Note: ollama_embed is decorated with @wrap_embedding_func_with_attrs,
         # which wraps it in an EmbeddingFunc. Using .func accesses the original
         # unwrapped function to avoid double wrapping when we create our own
@@ -131,6 +134,13 @@ async def initialize_rag():
                 api_key=os.getenv("EMBEDDING_BINDING_API_KEY", ""),
             ),
         ),
+        addon_params={
+            "chunker": {
+                "recursive_character": {
+                    "separators": eval(os.getenv("CHUNK_R_SEPARATORS", "['\n\n','\n','。',' ']")),
+                },
+            },
+        },
     )
 
     await rag.initialize_storages()  # Auto-initializes pipeline_status
@@ -170,7 +180,16 @@ async def main():
         print(f"Detected embedding dimension: {embedding_dim}\n\n")
 
         with open("./book.txt", "r", encoding="utf-8") as f:
-            await rag.ainsert(f.read(),file_paths="./book.txt")
+            content = f.read()
+            #await rag.ainsert(content,file_paths="./book[-R].txt")
+            await rag.apipeline_enqueue_documents(
+                content,
+                file_paths="./book-[-R].txt",
+                process_options="R",          # 选中递归字符切分
+            )
+            await rag.apipeline_process_enqueue_documents()
+
+        await rag.check_and_migrate_data()
 
         # Perform naive search
         print("\n=====================")

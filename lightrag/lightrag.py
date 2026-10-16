@@ -2184,7 +2184,7 @@ class LightRAG(_RoleLLMMixin, _StorageMigrationMixin, _PipelineMixin):
         # them while the response cache and other storages are still usable;
         # otherwise closing an asyncio.run()/manual loop after finalize leaves
         # their queue.get() coroutines pending on the destroyed event loop.
-        await self._shutdown_model_queues()
+
         if self._storages_status == StoragesStatus.INITIALIZED:
             await self._commit_cache_pair_before_finalize()
             storages = [
@@ -2237,6 +2237,7 @@ class LightRAG(_RoleLLMMixin, _StorageMigrationMixin, _PipelineMixin):
                 logger.debug("All storages finalized successfully")
 
             self._storages_status = StoragesStatus.FINALIZED
+        await self._shutdown_model_queues()
 
     async def get_graph_labels(self):
         text = await self.chunk_entity_relation_graph.get_all_labels()
