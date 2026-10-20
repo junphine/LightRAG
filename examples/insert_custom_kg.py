@@ -20,6 +20,7 @@ WORKING_DIR = "./custom_kg"
 if not os.path.exists(WORKING_DIR):
     os.mkdir(WORKING_DIR)
 
+os.environ['LIGHTRAG_GRAPH_STORAGE'] = 'GremlinStorage'
 
 async def llm_model_func(
         prompt, system_prompt=None, history_messages=[], keyword_extraction=False, **kwargs

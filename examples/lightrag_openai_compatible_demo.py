@@ -192,11 +192,12 @@ async def main():
         await rag.check_and_migrate_data()
 
         # Perform naive search
+        input = "故事的主题是什么?"
         print("\n=====================")
         print("Query mode: naive")
         print("=====================")
         resp = await rag.aquery(
-            "What are the top themes in this story?",
+            input,
             param=QueryParam(mode="naive", stream=True),
         )
         if inspect.isasyncgen(resp):
@@ -209,7 +210,7 @@ async def main():
         print("Query mode: local")
         print("=====================")
         resp = await rag.aquery(
-            "What are the top themes in this story?",
+            input,
             param=QueryParam(mode="local", stream=True),
         )
         if inspect.isasyncgen(resp):
@@ -222,7 +223,7 @@ async def main():
         print("Query mode: global")
         print("=====================")
         resp = await rag.aquery(
-            "What are the top themes in this story?",
+            input,
             param=QueryParam(mode="global", stream=True),
         )
         if inspect.isasyncgen(resp):
@@ -235,7 +236,7 @@ async def main():
         print("Query mode: hybrid")
         print("=====================")
         resp = await rag.aquery(
-            "What are the top themes in this story?",
+            input,
             param=QueryParam(mode="hybrid", stream=True),
         )
         if inspect.isasyncgen(resp):

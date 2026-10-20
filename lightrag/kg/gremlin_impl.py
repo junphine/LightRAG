@@ -57,7 +57,7 @@ from ..utils import logger, validate_workspace
 load_dotenv(dotenv_path=".env", override=False)
 
 if not pm.is_installed("gremlinpython"):
-    pm.install("gremlinpython")
+    pm.install("gremlinpython==3.73")
 
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
 from gremlin_python.process.anonymous_traversal import traversal
@@ -158,7 +158,7 @@ def build_has_edge(g: Any, workspace: str, source: str, target: str) -> Any:
         .hasLabel(workspace)
         .has("entity_id", source)
         .bothE()
-        .where(__.otherV().has("entity_id", target))
+        .where(__.other_v().has("entity_id", target))
         .limit(1)
         .count()
     )
@@ -201,7 +201,7 @@ def build_get_node_edges(g: Any, workspace: str, node_id: str) -> Any:
         .hasLabel(workspace)
         .has("entity_id", node_id)
         .bothE()
-        .where(__.otherV().has("entity_id"))
+        .where(__.other_v().has("entity_id"))
         .project("s", "t")
         .by(__.outV().values("entity_id"))
         .by(__.inV().values("entity_id"))
@@ -215,7 +215,7 @@ def build_get_edge(g: Any, workspace: str, source: str, target: str) -> Any:
         .hasLabel(workspace)
         .has("entity_id", source)
         .bothE()
-        .where(__.otherV().has("entity_id", target))
+        .where(__.other_v().has("entity_id", target))
         .valueMap()
         .by(__.unfold())
     )
@@ -238,11 +238,11 @@ def build_get_edges_batch(g: Any, workspace: str, pairs: list[tuple[str, str]]) 
         .as_("b")
         .select("a")
         .bothE()
-        .where(__.otherV().where(P.eq("b")))
+        .where(__.other_v().where(P.eq("b")))
         .project("src", "tgt", "props")
         .by(__.select("a").values("entity_id"))
         .by(__.select("b").values("entity_id"))
-        .by(__.valueMap().by(__.unfold()))
+        .by(__.value_map().by(__.unfold()))
     )
 
 
@@ -257,7 +257,7 @@ def build_add_node_props(g: Any, workspace: str, node_id: str, node_data: dict[s
             __.V()
             .hasLabel(workspace)
             .has("entity_id", __.select("row").by("entity_id")),
-            __.addV(workspace).property(
+            __.add_v(workspace).property(
                 "entity_id", __.select("row").by("entity_id")
             ),
         )
@@ -287,7 +287,7 @@ def build_add_nodes_batch(
             __.V()
             .hasLabel(workspace)
             .has("entity_id", __.select("row").by("entity_id")),
-            __.addV(workspace).property(
+            __.add_v(workspace).property(
                 "entity_id", __.select("row").by("entity_id")
             ),
         )
@@ -321,7 +321,7 @@ def build_add_edge(
         .coalesce(
             __.select("a")
             .bothE()
-            .where(__.otherV().where(P.eq("b"))),
+            .where(__.other_v().where(P.eq("b"))),
             __.select("a").addE(EDGE_LABEL).from_("a").to("b"),
         )
     )
@@ -360,7 +360,7 @@ def build_add_edges_batch(
         .coalesce(
             __.select("a")
             .bothE()
-            .where(__.otherV().where(P.eq("b"))),
+            .where(__.other_v().where(P.eq("b"))),
             __.select("a").addE(EDGE_LABEL).from_("a").to("b"),
         )
     )
@@ -396,7 +396,7 @@ def build_remove_edge(g: Any, workspace: str, source: str, target: str) -> Any:
         .hasLabel(workspace)
         .has("entity_id", source)
         .bothE()
-        .where(__.otherV().has("entity_id", target))
+        .where(__.other_v().has("entity_id", target))
         .drop()
     )
 
