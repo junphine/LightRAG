@@ -72,9 +72,9 @@ async def initialize_rag():
     return rag
 
 
-def main():
+async def main():
     # Initialize RAG instance
-    rag = asyncio.run(initialize_rag())
+    rag = await initialize_rag()
 
     with open("./book.txt", "r", encoding="utf-8") as f:
         rag.insert(f.read())
@@ -109,4 +109,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
